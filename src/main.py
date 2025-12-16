@@ -6,7 +6,7 @@ from google.adk.models.google_llm import Gemini
 from google.adk.runners import InMemoryRunner
 from google.adk.tools import AgentTool
 from google.genai import types
-import google.genai as genai
+import google.generativeai as genai
 from fastapi import FastAPI
 import uvicorn
 from pydantic import BaseModel
