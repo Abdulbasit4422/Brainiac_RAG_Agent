@@ -1,6 +1,10 @@
 import streamlit as st
 import asyncio
+from dotenv import load_dotenv # Import load_dotenv
 from src.main import orchestrator_agent, runner, get_final_text_response
+
+load_dotenv() # Call load_dotenv()
+
 
 def load_css(file_name):
     with open(file_name) as f:
