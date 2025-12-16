@@ -1,6 +1,7 @@
 # Example script to upsert data into Pinecone (user would run this once)
 from src.tools.pinecone_rag import init_pinecone, get_pinecone_index, embed_texts, upsert_vectors
 import os
+import time
 from docx import Document # Import the docx library
 
 def read_word_document(file_path: str) -> list[str]:
@@ -17,23 +18,31 @@ def read_word_document(file_path: str) -> list[str]:
     paragraphs = [paragraph.text.strip() for paragraph in document.paragraphs if paragraph.text.strip()]
     return paragraphs
 
-def populate_pinecone_index(word_document_path: str, batch_size: int = 100):
+def populate_pinecone_index(word_document_path: str, batch_size: int = 100, start_batch: int = 0):
     init_pinecone()
     index_name = os.getenv("PINECONE_INDEX_NAME")
     if not index_name:
         raise ValueError("PINECONE_INDEX_NAME must be set in the .env file.")
     index = get_pinecone_index(index_name)
 
+    # Add a delay to allow the index to initialize
+    print("Waiting for Pinecone index to initialize...")
+    time.sleep(60)
+    print("Pinecone index should be initialized.")
+
     # Read content from the Word document
     print(f"Reading document: {word_document_path}")
     paragraphs = read_word_document(word_document_path)
     print(f"Found {len(paragraphs)} paragraphs in the document.")
 
+    start_index = (start_batch - 1) * batch_size if start_batch > 0 else 0
+
     total_upserted = 0
-    for i in range(0, len(paragraphs), batch_size):
+    for i in range(start_index, len(paragraphs), batch_size):
         batch = paragraphs[i:i+batch_size]
         
-        print(f"Processing batch {i//batch_size + 1}...")
+        current_batch_num = i // batch_size + 1
+        print(f"Processing batch {current_batch_num}...")
 
         # Embed the batch of texts
         embeddings = embed_texts(batch)
@@ -56,5 +65,5 @@ def populate_pinecone_index(word_document_path: str, batch_size: int = 100):
 
 if __name__ == "__main__":
     # The user needs to replace this with the actual path to their Word document
-    word_doc_path = r"C:\Users\HP\Desktop\Agent_AI_Project\LONGEVITY CHATBOT Q&A KNOWLEDGE BASE .docx"
-    populate_pinecone_index(word_doc_path)
+    word_doc_path = r"C:\Users\HP\Desktop\Rag_Agentic\BSL-Agentic-AI-Assistant-Project\LONGEVITY CHATBOT Q&A KNOWLEDGE BASE .docx"
+    populate_pinecone_index(word_doc_path, start_batch=259)

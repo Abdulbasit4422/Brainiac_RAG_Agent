@@ -60,7 +60,7 @@ def get_pinecone_index(index_name: str) -> Any:
     index_names = [index.name for index in index_list]
     if index_name not in index_names:
         cloud = os.getenv("PINECONE_CLOUD", "aws") # Default to aws if not specified
-        region = os.getenv("PINECONE_REGION", "us-west-2") # Default to us-west-2 if not specified
+        region = os.getenv("PINECONE_REGION", "us-east-1") # Default to us-west-2 if not specified
 
         _pinecone_client.create_index(
             name=index_name,

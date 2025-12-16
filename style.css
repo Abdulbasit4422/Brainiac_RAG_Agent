@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+body {
+    color: #E0E0E0;
+    background-color: #0d0c22;
+}
+
+.stApp {
+    background-color: #0d0c22;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', sans-serif;
+    color: #8A2BE2; /* BlueViolet */
+}
+
+.stTextInput > div > div > input {
+    background-color: #1a1a36;
+    color: #E0E0E0;
+    border: 1px solid #8A2BE2;
+    border-radius: 10px;
+}
+
+.stButton > button {
+    background-color: #8A2BE2; /* BlueViolet */
+    color: white;
+    border-radius: 10px;
+    border: none;
+    padding: 10px 20px;
+    font-family: 'Orbitron', sans-serif;
+    transition: background-color 0.3s ease;
+}
+
+.stButton > button:hover {
+    background-color: #483D8B; /* DarkSlateBlue */
+}
+
+.stMarkdown {
+    background-color: #1a1a36;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #483D8B;
+}
+
+.stSpinner > div {
+    border-top-color: #8A2BE2;
+}
