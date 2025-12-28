@@ -13,17 +13,17 @@ def load_css(file_name):
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 def futuristic_ui():
-    st.set_page_config(page_title="BSL Agentic AI", page_icon="✨", layout="wide")
+    st.set_page_config(page_title="Brainiac Agentic AI", page_icon="✨", layout="wide")
     load_css("style.css")
 
-    st.title("BSL Agentic AI Assistant")
-    st.write("Your expert consultant for BSL services.")
+    st.title("Brainiac Agentic AI Assistant")
+    st.write("I am a expert in Healthspan and Vitality Medicine")
 
     query = st.text_input("Ask your question:", "")
 
     if st.button("Get Answer"):
         if query:
-            with st.spinner("Finding the best answer for you..."):
+            with st.spinner("Synthesizing evidence-based insights..."):
                 try:
                  loop = asyncio.get_event_loop()
                 except RuntimeError:
