@@ -38,9 +38,20 @@ html, body {
 }
 
 .block-container{
-  padding-top: 2.2rem;
-  padding-bottom: 3rem;
-  max-width: 1200px;
+  padding-top: 1rem;
+  padding-bottom: 240px; /* Space for fixed bottom */
+  max-width: 1100px;
+}
+
+/* ---------- Fixed Bottom Container ---------- */
+.fixed-bottom-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 30px 0 40px 0;
+    background: linear-gradient(to top, var(--bg-0) 70%, transparent);
+    z-index: 999;
 }
 
 /* Grid overlay */
@@ -236,22 +247,8 @@ header[data-testid="stHeader"], footer {
 }
 
 .chat-history-container {
-  max-height: 65vh;
-  overflow-y: auto;
   padding-right: 10px;
   margin-top: 10px;
-}
-
-/* Custom Scrollbar for the History */
-.chat-history-container::-webkit-scrollbar {
-  width: 5px;
-}
-.chat-history-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-}
-.chat-history-container::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 10px;
 }
 
 .response--empty{
