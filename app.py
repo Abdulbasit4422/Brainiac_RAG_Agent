@@ -79,18 +79,28 @@ def futuristic_ui():
             if query:
                 with st.spinner("Synthesizing evidence-based insights..."):
                     try:
-                        loop = asyncio.get_event_loop()
-                    except RuntimeError:
-                        loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(loop)
+                        # Use a cleaner way to run the async code in Streamlit
+                        async def run_agent():
+                            return await runner.run_debug(query)
+                        
+                        # run_until_complete can be brittle in Streamlit, 
+                        # but if we are in a script, we can try to get the current loop
+                        try:
+                            loop = asyncio.get_running_loop()
+                            # If a loop is already running (like in Streamlit), we might need to 
+                            # use a different approach or run it in a thread if it's blocking.
+                            # However, for Google GenAI, usually creating a new task works.
+                            response_events = asyncio.run_coroutine_threadsafe(run_agent(), loop).result()
+                        except RuntimeError:
+                            # No loop running, use asyncio.run
+                            response_events = asyncio.run(run_agent())
 
-                    response_events = loop.run_until_complete(runner.run_debug(query))
-                    final_response = get_final_text_response(response_events)
+                        final_response = get_final_text_response(response_events)
 
-                    # Store newest first to show latest query at the top of the history list if desired
-                    # or newest at bottom for natural chat flow. 
-                    # User asked for "always scroll up to go and recheck", implying bottom-heavy flow.
-                    st.session_state.chat_history.append({"question": query, "answer": final_response})
+                        # Store newest at bottom for natural chat flow
+                        st.session_state.chat_history.append({"question": query, "answer": final_response})
+                    except Exception as e:
+                        st.error(f"An error occurred: {str(e)}")
             else:
                 st.warning("Please enter a question.")
 
