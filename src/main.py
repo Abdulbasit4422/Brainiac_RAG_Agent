@@ -37,12 +37,21 @@ retry_config = types.HttpRetryOptions(
 orchestrator_agent = LlmAgent(
     name="OrchestratorAgent",
     model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
-    instruction="""You are an expert orchestrator designed to answer user queries comprehensively.
-    First, attempt to answer the question using the `rag_agent`.
-    If the `rag_agent` indicates it cannot answer the question (e.g., by returning an empty string or explicitly stating lack of information),
-    then use the `search_agent` to find relevant information from Google.
-    Combine information from both sources if available and relevant, prioritizing factual information from the RAG agent when present.
-    Always provide a detailed and helpful answer.
+    instruction="""You are an expert orchestrator for the BSL Agentic AI System. Your goal is to provide accurate, real-time answers to user queries about health, longevity, and general world news.
+
+    ORCHESTRATION PROTOCOL:
+    1. First, call `rag_agent` with the user query.
+    2. If `rag_agent` returns ONLY the word "TRIGGER_SEARCH", it means the internal BSL knowledge base doesn't have the answer. You MUST then call `search_agent` to retrieve real-time information from Google.
+    3. If `rag_agent` returns a structured answer (not just TRIGGER_SEARCH), prioritize that information.
+    4. If you have information from both agents, combine them logically.
+    
+    CRITICAL RULE FOR REAL-TIME QUERIES:
+    If `search_agent` provides factual, real-time data (like current events, news, or specific dates), do NOT use your internal safety "I cannot provide future/real-time events" filler. Instead, trust the `search_agent` results and synthesize them into a professional, detailed response for the user.
+
+    RESPONSE QUALITY:
+    - Synthesize a single, coherent response based on the agent outputs.
+    - If search results were used, credit the sources appropriately.
+    - Maintain a professional and helpful tone.
     """,
     tools=[
         AgentTool(agent=rag_agent),
@@ -69,13 +78,14 @@ class QueryResponse(BaseModel):
 def get_final_text_response(response_events: list) -> str:
     """Extracts the final text response from the agent's execution events."""
     final_text = ""
+    # We want the LAST non-empty text response from the OrchestratorAgent
     for event in reversed(response_events):
-        if hasattr(event.content, "parts") and event.content.parts:
-            for part in event.content.parts:
-                if hasattr(part, "text") and part.text:
-                    final_text = part.text
-                    return final_text # Return the last text response found
-    return final_text if final_text else "No text response found."
+        if event.author == "OrchestratorAgent":
+            if hasattr(event, "content") and event.content.parts:
+                for part in event.content.parts:
+                    if hasattr(part, "text") and part.text and part.text.strip():
+                        return part.text.strip()
+    return "No final text response from orchestrator."
 
 @app.post("/query", response_model=QueryResponse)
 async def handle_query(request: QueryRequest):

@@ -19,41 +19,38 @@ retry_config = types.HttpRetryOptions(
 def retrieve_from_pinecone(query: str) -> str:
     """
     Retrieves relevant information from the Pinecone knowledge base based on the query.
-    If no relevant information is found, it returns an empty string.
+    If no relevant information is found, it returns 'TRIGGER_SEARCH'.
     """
     rag_results, _ = pinecone_rag.rag(query)
 
-    if not rag_results['matches']:
-        return ""
+    if not rag_results or not rag_results.get('matches'):
+        return "TRIGGER_SEARCH"
 
     # Combine context from top results (can be adjusted)
     context = ""
     for match in rag_results['matches']:
-        if match['score'] > 0.7: # Only include results with a good score
+        if match.get('score', 0) > 0.7: # Only include results with a good score
             context += match['metadata']['text'] + "\n"
-    return context.strip()
+    
+    final_context = context.strip()
+    return final_context if final_context else "TRIGGER_SEARCH"
 
 
 rag_agent = LlmAgent(
     name="rag_agent",
     model=Gemini(model="gemini-2.5-flash", retry_options=retry_config),
-    instruction="""You are a Retrieval-Augmented Generation agent.
-    You are the BSL Agentic AI Assistant, a highly skilled, expert consultant for [Your Startup Name - based on conversation context] services. Your primary function is to provide comprehensive, meticulously structured, and authoritative answers to user queries.
-    1. Primary Directive (Source Hierarchy):
-    • PRIORITY 1 (Internal RAG): Always prioritize the context retrieved from the Pinecone knowledge base (the internal LONGEVITY CHATBOT Q&A KNOWLEDGE BASE .docx). Use this information to formulate detailed answers about BSL services.
-    • PRIORITY 2 (External Search): If the internal RAG context is insufficient, outdated, or if the user query is external to BSL's services, you must activate the Google Search fallback function to retrieve current, relevant information.
-    2. Response Structure and Quality: Your responses must be:
-    • Elaborate: Provide depth and detail, explaining concepts fully. Do not offer terse or single-sentence answers.
-    • Comprehensive: Address all aspects of the user's query, integrating both RAG and Search results seamlessly when necessary.
-    • Well-Structured: Utilize clear formatting elements to enhance readability.
-    3. Formatting Requirements (Mandatory Output Structure): All responses must adhere to the following structure:
-    • A. Summary Overview: Start with a brief, high-level summary (1-2 sentences) of the answer.
-    • B. Detailed Explanation (Use Headings): Elaborate on the answer using Markdown headings (##) for main topics and sub-headings (###) where appropriate.
-    • C. Key Takeaways/Action Items (Use Bullet Points): Present critical facts, requirements, or next steps in a bulleted or numbered list for easy scanning.
-    • D. Source Attribution: Clearly indicate where the information was derived. If based on the Pinecone RAG, state "Source: Internal BSL Knowledge Base." If based on Google Search, cite the source found via the search function.
-    4. Tone and Persona: Maintain a professional, helpful, confident, and highly accurate tone suitable for a certified AI assistant. If you cannot find the information, clearly state the limits of the current search rather than generating speculative content.
-    If the `retrieve_from_pinecone` tool returns an empty context, it means you do not have sufficient information in your knowledge base to answer the question. In such cases, you must state that you cannot answer based on your knowledge base.
-    Always prioritize the retrieved context. Do not make up information.
+    instruction="""You are a Retrieval-Augmented Generation agent specialized in BSL health and longevity services.
+    
+    CRITICAL PROTOCOL:
+    1. Call the `retrieve_from_pinecone` tool first.
+    2. If the tool returns "TRIGGER_SEARCH", you MUST respond ONLY with the exact word "TRIGGER_SEARCH". No conversational filler.
+    3. If the tool returns actual context, use it to answer the query following this structure:
+       - A. Summary Overview: High-level summary.
+       - B. Detailed Explanation: Use Markdown headings.
+       - C. Key Takeaways: Bulleted list.
+       - D. Source Attribution: "Source: Internal BSL Knowledge Base."
+    
+    Do not speculate. If the information isn't in the context, signal TRIGGER_SEARCH.
     """,
     tools=[retrieve_from_pinecone],
 )
