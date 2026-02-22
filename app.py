@@ -56,24 +56,24 @@ def futuristic_ui():
         with cols[0]:
             get_answer_clicked = st.button("Get Answer")
         with cols[1]:
-            st.markdown(
-                '<div class="mini-stats"><span class="dot dot--cyan"></span><span class="mini-stats__text">Neon UI • Glassmorphism</span></div>',
-                unsafe_allow_html=True,
-            )
+            # Add a clear button to reset history
+            if st.button("Reset Conversation"):
+                st.session_state.chat_history = []
+                st.rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
 
     with right:
         st.markdown('<div class="glass card">', unsafe_allow_html=True)
-        st.markdown('<div class="card__title">Output</div>', unsafe_allow_html=True)
+        st.markdown('<div class="card__title">Conversation History</div>', unsafe_allow_html=True)
         st.markdown(
-            '<div class="card__hint">Responses appear here. HTML rendering is enabled for rich formatting.</div>',
+            '<div class="card__hint">Your full session history is preserved below. Scroll to review past insights.</div>',
             unsafe_allow_html=True,
         )
 
-        # Keep results across reruns (layout-only enhancement; logic intact)
-        if "final_response" not in st.session_state:
-            st.session_state.final_response = ""
+        # Initialize chat history if it doesn't exist
+        if "chat_history" not in st.session_state:
+            st.session_state.chat_history = []
 
         if get_answer_clicked:
             if query:
@@ -87,21 +87,33 @@ def futuristic_ui():
                     response_events = loop.run_until_complete(runner.run_debug(query))
                     final_response = get_final_text_response(response_events)
 
-                    st.session_state.final_response = final_response
+                    # Store newest first to show latest query at the top of the history list if desired
+                    # or newest at bottom for natural chat flow. 
+                    # User asked for "always scroll up to go and recheck", implying bottom-heavy flow.
+                    st.session_state.chat_history.append({"question": query, "answer": final_response})
             else:
                 st.warning("Please enter a question.")
 
-        if st.session_state.final_response:
-            st.markdown(
-                f'<div class="response">{st.session_state.final_response}</div>',
-                unsafe_allow_html=True,
-            )
+        # Render all interactions
+        if st.session_state.chat_history:
+            # Wrap the entire history in our scrollable container
+            st.markdown('<div class="chat-history-container">', unsafe_allow_html=True)
+            for chat in st.session_state.chat_history:
+                st.markdown(
+                    f'<div class="chat-question"><b>Query:</b> {chat["question"]}</div>',
+                    unsafe_allow_html=True
+                )
+                st.markdown(
+                    f'<div class="response">{chat["answer"]}</div>',
+                    unsafe_allow_html=True,
+                )
+            st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.markdown(
                 '''
                 <div class="response response--empty">
                   <div class="response__icon">⌁</div>
-                  <div class="response__text">No output yet. Ask a question to begin.</div>
+                  <div class="response__text">No interactions yet. Ask a question to begin.</div>
                 </div>
                 ''',
                 unsafe_allow_html=True,
